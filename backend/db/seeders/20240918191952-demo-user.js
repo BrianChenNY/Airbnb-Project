@@ -1,30 +1,3 @@
-// 'use strict';
-
-// /** @type {import('sequelize-cli').Migration} */
-// module.exports = {
-//   async up (queryInterface, Sequelize) {
-//     /**
-//      * Add seed commands here.
-//      *
-//      * Example:
-//      * await queryInterface.bulkInsert('People', [{
-//      *   name: 'John Doe',
-//      *   isBetaMember: false
-//      * }], {});
-//     */
-//   },
-
-//   async down (queryInterface, Sequelize) {
-//     /**
-//      * Add commands to revert seed here.
-//      *
-//      * Example:
-//      * await queryInterface.bulkDelete('People', null, {});
-//      */
-//   }
-// };
-
-
 'use strict';
 
 const { User } = require('../models');
@@ -40,16 +13,22 @@ module.exports = {
     await User.bulkCreate([
       {
         email: 'demo@user.io',
+        firstname: 'Demo',
+        lastname:'lition',
         username: 'Demo-lition',
         hashedPassword: bcrypt.hashSync('password')
       },
       {
         email: 'user1@user.io',
+        firstname: 'Fake',
+        lastname:'User1',
         username: 'FakeUser1',
         hashedPassword: bcrypt.hashSync('password2')
       },
       {
         email: 'user2@user.io',
+        firstname: 'Fake',
+        lastname:'User2',
         username: 'FakeUser2',
         hashedPassword: bcrypt.hashSync('password3')
       }
