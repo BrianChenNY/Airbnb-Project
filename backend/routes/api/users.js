@@ -39,7 +39,7 @@ const validateSignup = [
 router.post('/',validateSignup, async (req, res) => {
     const { email, password, username, firstname, lastname } = req.body;
     
-    // Error response: User already exists with the specified email or username
+    // Sign Up a User: Error response: User already exists with the specified email or username
     const existingUser = await User.findOne({
       where:{
         [Op.or]: [{ email:email }, { username:username }],
