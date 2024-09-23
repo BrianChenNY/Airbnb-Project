@@ -14,6 +14,11 @@ module.exports = {
         spotId:1,
         url:'testUrl',
         preview:false
+      },
+      {
+        spotId:2,
+        url:'testUrl',
+        preview:true
       }
     ])
   },
@@ -22,7 +27,7 @@ module.exports = {
     options.tableName = 'SpotImages';
     const Op = Sequelize.Op;
     return queryInterface.bulkDelete(options, {
-      spotId: { [Op.in]: [1] }
+      spotId: { [Op.in]: [1,2] }
     }, {});
   }
 };

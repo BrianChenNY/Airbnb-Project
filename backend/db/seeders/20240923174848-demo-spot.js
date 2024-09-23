@@ -22,6 +22,18 @@ module.exports = {
         name: 'test name',
         description: 'test description',
         price: 500,
+      },
+      {
+        ownerId: 2,
+        address: '222 test street',
+        city: 'Duluth',
+        state: 'GA',
+        country: 'United States',
+        lat: 50,
+        lng: 100,
+        name: 'test name',
+        description: 'test description',
+        price: 500,
       }
     ])
   },
@@ -30,7 +42,7 @@ module.exports = {
     options.tableName = 'Spots';
     const Op = Sequelize.Op;
     return queryInterface.bulkDelete(options, {
-      address: { [Op.in]: ['123 test street'] }
+      ownerId: { [Op.in]: [1,2] }
     }, {});
   }
 };
