@@ -6,6 +6,9 @@ const { User } = require('../../db/models');
 const router = express.Router();
 const { check } = require('express-validator');
 const { handleValidationErrors } = require('../../utils/validation');
+// added op command from sequelize
+const { Op } = require('sequelize');
+//
 
 const validateSignup = [
   check('email')
@@ -33,11 +36,30 @@ const validateSignup = [
   handleValidationErrors
 ];
 // Sign up
-router.post(
-  '/',
-  validateSignup,
-  async (req, res) => {
+router.post('/',validateSignup, async (req, res) => {
     const { email, password, username, firstname, lastname } = req.body;
+    
+    // Error response: User already exists with the specified email or username
+    const existingUser = await User.findOne({
+      where:{
+        [Op.or]: [{ email:email }, { username:username }],
+      }
+    })
+    if(existingUser){
+      let errors = {}
+      if(existingUser.username === username){
+        errors.username = "User with that username already exists"
+      }
+      else if (existingUser.email === username){
+        errors.email = "User with that email already exists"
+      }
+      return res.status(500).json({
+        message:"User already exists",
+        errors
+      })
+    }
+    // Ziwen ^^^
+
     const hashedPassword = bcrypt.hashSync(password);
     const user = await User.create({ email, username, hashedPassword, firstname, lastname });
 
