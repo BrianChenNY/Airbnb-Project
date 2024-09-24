@@ -32,23 +32,23 @@ const addAvgRatingAndPreviewImage = {
 // Ziwen ^^^-------------------------------------------------------------------
 
 
-// Authentication Test-------------------------------------------------------
-let authenticationTest = function(req){
-    let token = req.cookies.token;
-    if (!token) {
-        // Handle missing token
-        return res.status(401).json({ message: 'Authentication required' });
-    }
-    let secret = process.env.JWT_SECRET
-    // let payload = jwt.decode(token)
-    // console.log(payload)
-    try {
-        let verifiedPayload = jwt.verify(token, secret);
-        return true;
-      } catch (error) {
-        return res.status(401).json({ message: 'Authentication required' });
-      }
-}
+// Authorization Test by spotId belongs to current user------------------------
+// const authorizationTest = async function(req, res, next) {
+//     const userId = req.user.id;
+//     const spot = await Spot.findOne({
+//         where: { id: req.params.spotId }
+//         });
+//     // Check if the spot exists
+//     if (!spot) {
+//         return res.status(404).json({ "message": "Spot couldn't be found" });
+//     }
+//     // Check if user is the owner of the spot
+//     const spotOwnerId = spot.ownerId;
+//     if (userId !== spotOwnerId) {
+//         return res.status(403).json({ "message": "Forbidden" });
+//     }
+//     next();
+// }
 // Ziwen ^^^----------------------------------------------------------------
 
 // get all spots--------------------------------------------------------------
@@ -61,8 +61,6 @@ router.get('/', async (req, res) => {
 
 // Get all Spots owned by the Current User-----------------------------------------------
 router.get('/current', requireAuth, async (req,res) =>{
-        // authenticationTest(req)
-        // console.log('Verified payload:',verifiedPayload)
         const userId = req.user.id
         const Spots = await Spot.findAll({
             where:{ownerId:userId},
@@ -108,7 +106,7 @@ router.get('/:spotId', async(req,res) =>{
 })
 // Ziwen ^^^ -------------------------------------------------------------------------
 
-// Create a Spot
+// Create a Spot-------------------------------------------------------------------------
 // const validateSpot = [
 //     check('address')
 //         .notEmpty()
@@ -189,7 +187,10 @@ router.post('/', requireAuth, validateSpot, async (req, res) => {
         }
     }
 );
+// Ziwen ^^^ -------------------------------------------------------------------------
 
+
+// Add an Image to a Spot based on the Spot's id---------------------------------------
 router.post('/:spotId/images', requireAuth, async (req, res) => {
     //authorization
     const userId = req.user.id
@@ -219,13 +220,73 @@ router.post('/:spotId/images', requireAuth, async (req, res) => {
         url,
         preview
     })
+})
+// Ziwen ^^^ ----------------------------------------------------------------------
+
+// Edit a Spot----------------------------------------------------------------------
+router.put('/:spotId', requireAuth, validateSpot, async (req, res) => {
+    //! authorization could refactor
+    // try {
+    const userId = req.user.id
+    const spot = await Spot.findOne({
+        where:{
+            id: req.params.spotId
+        }
+    })
+    if(!spot){
+        return res.status(404).json( {"message": "Spot couldn't be found"} )
+    };
+    const spotOwnerId = spot.ownerId
+    if(userId !== spotOwnerId){
+        return res.status(403).json({ "message": "Forbidden" })
+    }
+    //!
+    const { address, city, state, country, lat, lng, name, description, price } = req.body;
+    spot.address = address;
+    spot.city = city;
+    spot.state = state;
+    spot.country = country;
+    spot.lat = 'lat';
+    spot.lng = 'lng';
+    spot.name = name;
+    spot.description = description;
+    spot.price = price;
+    await spot.save();
+
+    res.status(200).json(spot)
+    // } catch(error){
+    //     return res.status(400).json({
+    //         message: "Bad Request",
+    //         errors: error.message
+    //     })
+    // }
+})
+// Ziwen ^^^ ----------------------------------------------------------------------
+
+
+router.delete('/:spotId', requireAuth, async (req, res) => {
+    //! authorization could refactor
+    const userId = req.user.id
+    const spot = await Spot.findOne({
+        where:{
+            id: req.params.spotId
+        }
+    })
+    if(!spot){
+        return res.status(404).json( {"message": "Spot couldn't be found"} )
+    };
+    const spotOwnerId = spot.ownerId
+    if(userId !== spotOwnerId){
+        return res.status(403).json({ "message": "Forbidden" })
+    }
+    //!
+    const deleteSpot = await Spot.findByPk(req.params.spotId);
+    await deleteSpot.destroy();
+    res.json({
+      message: 'Successfully deleted',
+    })
 
 })
-
-
-
-
-
 
 
 
