@@ -45,6 +45,76 @@ router.get('/current', requireAuth, async (req, res) => {
 });
 //--------------------------------------------------------------------------------------------
 
+//Edit a Booking-----------------------------------------------------------------------------
+router.put('/:bookingId', requireAuth , async (req,res) =>{
+    const userId = req.user.id
+    //!refactor
+    const targetBooking = await Booking.findOne({
+        where:{id:req.params.bookingId}
+    })
+
+    if(!targetBooking){
+        return res.status(404).json( {"message": "Booking couldn't be found"} )
+    };
+
+    const BookingUserId = targetBooking.userId
+    if(userId !== BookingUserId){
+        return res.status(403).json({ "message": "Forbidden" })
+    }
+    // check start date is before end
+    if(req.body.startDate >= req.body.endDate){
+        let errors = {}
+        errors.endDate = "endDate cannot be on or before startDate"
+        return res.status(400).json({
+            "message":"Bad Request",
+            errors
+        })
+    }
+    //
+    const allBookings = await Booking.findAll({
+        where: { id: req.params.bookingId }
+    }) 
+    for (const booking of allBookings) {
+        const bookingJson = booking.toJSON();
+        const bookingStartDate = new Date(req.body.startDate);
+        const bookingEndDate = new Date(req.body.endDate);
+        // console.log('start','\n',bookingStartDate, '\n', 'end', '\n', bookingEndDate)
+        // console.log(bookingStartDate.toISOString() == bookingJson.startDate.toISOString())
+        if(bookingStartDate.toISOString() === bookingJson.startDate.toISOString() && bookingEndDate.toISOString() === bookingJson.endDate.toISOString()){
+            let errors = {}
+            errors.startDate ="Start date conflicts with an existing booking";
+            errors.endDate ="End date conflicts with an existing booking";
+            return res.status(403).json({
+                "message": "Sorry, this spot is already booked for the specified dates",
+                errors
+            })
+        }
+        else if(bookingEndDate.toISOString() === bookingJson.endDate.toISOString()){
+            let errors = {}
+            errors.endDate ="End date conflicts with an existing booking"
+            return res.status(403).json({
+                "message": "Sorry, this spot is already booked for the specified dates",
+                errors
+            })
+        }
+        else if(bookingStartDate.toISOString() === bookingJson.startDate.toISOString()){
+            let errors = {}
+            errors.startDate ="Start date conflicts with an existing booking"
+            return res.status(403).json({
+                "message": "Sorry, this spot is already booked for the specified dates",
+                errors
+            })
+        }
+    };
+//!refactor
+    const {startDate,endDate} = req.body
+    targetBooking.startDate = startDate;
+    targetBooking.endDate = endDate;
+    await targetBooking.save()
+    res.status(200).json(targetBooking)
+})
+//--------------------------------------------------------------------------------------------
+
 
 
 module.exports = router;
