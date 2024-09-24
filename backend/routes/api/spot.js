@@ -3,6 +3,9 @@ const { Spot, User, Booking, Review, ReviewImage, SpotImage, Sequelize } = requi
 const router = express.Router();
 const { Op } = require('sequelize');
 const jwt = require('jsonwebtoken');
+const { requireAuth } = require('../../utils/auth');
+const { check } = require('express-validator');
+const { handleValidationErrors } = require('../../utils/validation');
 
 // Add average rating and preview image urls to current query------------------------
 const addAvgRatingAndPreviewImage = {
@@ -39,7 +42,12 @@ let authenticationTest = function(req){
     let secret = process.env.JWT_SECRET
     // let payload = jwt.decode(token)
     // console.log(payload)
-    let verifiedPayload = jwt.verify(token, secret)
+    try {
+        let verifiedPayload = jwt.verify(token, secret);
+        return true;
+      } catch (error) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
 }
 // Ziwen ^^^----------------------------------------------------------------
 
@@ -52,9 +60,8 @@ router.get('/', async (req, res) => {
 // Ziwen ^^^----------------------------------------------------------------------
 
 // Get all Spots owned by the Current User-----------------------------------------------
-router.get('/current', async (req,res) =>{
-    try {
-        authenticationTest(req)
+router.get('/current', requireAuth, async (req,res) =>{
+        // authenticationTest(req)
         // console.log('Verified payload:',verifiedPayload)
         const userId = req.user.id
         const Spots = await Spot.findAll({
@@ -64,10 +71,6 @@ router.get('/current', async (req,res) =>{
         res.json({
             Spots
         })
-      } 
-      catch (error) {
-        return res.status(401).json({ message: 'Authentication required' });
-      }
 })
 // Ziwen ^^^--------------------------------------------------------------------------
 
@@ -104,6 +107,68 @@ router.get('/:spotId', async(req,res) =>{
     
 })
 // Ziwen ^^^ -------------------------------------------------------------------------
+
+// // Create a Spot
+// const validateSpot = [
+//     check('address')
+//         .notEmpty()
+//         .withMessage('Street address is required'),
+//     check('city')
+//         .notEmpty()
+//         .withMessage('City is required'),
+//     check('state')
+//         .notEmpty()
+//         .withMessage('State is required'),
+//     check('country')
+//         .notEmpty()
+//         .withMessage('Country is required'),
+//     check('lat')
+//         .notEmpty()
+//         .withMessage('Latitude is not valid'),
+//     check('lng')
+//         .notEmpty()
+//         .withMessage('Longitude is not valid'),
+//     check('name')
+//         .notEmpty()
+//         .withMessage('Name is required')
+//         .isLength({ max: 50 })
+//         .withMessage('Name must be less than 50 characters'),
+//     check('description')
+//         .notEmpty()
+//         .withMessage('Description is required'),
+//     check('price')
+//         .notEmpty()
+//         .withMessage('Price per day is required'),
+//     handleValidationErrors
+//   ];
+
+// router.post('/', requireAuth, validateSpot, async (req, res) => {
+//     try {
+//         const newSpot = await Spot.create({
+//           ownerId: req.user.id,
+//           ...req.body
+//         });
+//         res.status(201).json(newSpot);
+//     } catch (error) {
+//         return res.status(400).json({
+//           message: 'Bad request',
+//           errors: error.message,
+//         });
+//         }
+//     }
+// );
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

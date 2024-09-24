@@ -17,8 +17,8 @@ const validateSignup = [
     .withMessage('Invalid email'),
   check('username')
     .exists({ checkFalsy: true })
-    .isLength({ min: 4 })
-    .withMessage('Please provide a username with at least 4 characters.'),
+    // .isLength({ min: 4 })
+    .withMessage('Username is required'),
   check('username')
     .not()
     .isEmail()
@@ -38,28 +38,29 @@ const validateSignup = [
 // Sign up
 router.post('/',validateSignup, async (req, res) => {
     const { email, password, username, firstname, lastname } = req.body;
-    
-    // Sign Up a User: Error response: User already exists with the specified email or username
+
     const existingUser = await User.findOne({
-      where:{
-        [Op.or]: [{ email:email }, { username:username }],
+      where: {
+        [Op.or]: [{ email: email }, { username: username }],
+      },
+      attributes:['email','username']
+    });
+    
+    if (existingUser) {
+      let err = {};
+      if (existingUser.username === username) {
+        err.username = "User with that username already exists";
       }
-    })
-    if(existingUser){
-      let errors = {}
-      if(existingUser.username === username){
-        errors.username = "User with that username already exists"
-      }
-      else if (existingUser.email === username){
-        errors.email = "User with that email already exists"
+      if (existingUser.email === email) {
+        err.email = "User with that email already exists";
       }
       return res.status(500).json({
-        message:"User already exists",
-        errors
-      })
+        message: "User already exists",
+        err
+      });
     }
-    // Ziwen ^^^
 
+    try{
     const hashedPassword = bcrypt.hashSync(password);
     const user = await User.create({ email, username, hashedPassword, firstname, lastname });
 
@@ -76,6 +77,12 @@ router.post('/',validateSignup, async (req, res) => {
     return res.status(201).json({
       user: safeUser
     });
+    } catch (error) {
+      return res.status(500).json({
+        message: "Bad Request",
+        error,
+      });
+    }
   }
 );
 
