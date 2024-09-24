@@ -115,6 +115,35 @@ router.put('/:bookingId', requireAuth , async (req,res) =>{
 })
 //--------------------------------------------------------------------------------------------
 
+//Delete a Booking--------------------------------------------------------------------------
+router.delete('/:bookingId' , requireAuth , async (req,res) =>{
+    const userId = req.user.id
+    //!refactor
+    const targetBooking = await Booking.findOne({
+        where:{id:req.params.bookingId}
+    })
 
+    if(!targetBooking){
+        return res.status(404).json( {"message": "Booking couldn't be found"} )
+    };
+
+    const BookingUserId = targetBooking.userId
+
+    const bookingSpot = await Spot.findOne({
+        where:{id:targetBooking.spotId}
+    })
+
+    const bookingSpotOwnerId = bookingSpot.ownerId
+    if(userId == BookingUserId || bookingSpotOwnerId == BookingUserId){
+        await targetBooking.destroy()
+        res.status(200).json({
+            "message": "Successfully deleted"
+        })
+    }
+    else {return res.status(403).json({ "message": "Forbidden" })}
+})
+
+
+//--------------------------------------------------------------------------------------------
 
 module.exports = router;
