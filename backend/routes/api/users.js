@@ -6,16 +6,19 @@ const { User } = require('../../db/models');
 const router = express.Router();
 const { check } = require('express-validator');
 const { handleValidationErrors } = require('../../utils/validation');
+// added op command from sequelize
+const { Op } = require('sequelize');
+//
 
 const validateSignup = [
   check('email')
     .exists({ checkFalsy: true })
     .isEmail()
-    .withMessage('Please provide a valid email.'),
+    .withMessage('Invalid email'),
   check('username')
     .exists({ checkFalsy: true })
-    .isLength({ min: 4 })
-    .withMessage('Please provide a username with at least 4 characters.'),
+    // .isLength({ min: 4 })
+    .withMessage('Username is required'),
   check('username')
     .not()
     .isEmail()
@@ -26,18 +29,38 @@ const validateSignup = [
     .withMessage('Password must be 6 characters or more.'),
   check('firstname')
     .exists({ checkFalsy: true })
-    .withMessage('Must have firstname'),
+    .withMessage('First Name is required'),
   check('lastname')
     .exists({ checkFalsy: true })
-    .withMessage('Must have lastname'),
+    .withMessage('Last Name is required'),
   handleValidationErrors
 ];
 // Sign up
-router.post(
-  '/',
-  validateSignup,
-  async (req, res) => {
+router.post('/',validateSignup, async (req, res) => {
     const { email, password, username, firstname, lastname } = req.body;
+
+    const existingUser = await User.findOne({
+      where: {
+        [Op.or]: [{ email: email }, { username: username }],
+      },
+      attributes:['email','username']
+    });
+    
+    if (existingUser) {
+      let err = {};
+      if (existingUser.username === username) {
+        err.username = "User with that username already exists";
+      }
+      if (existingUser.email === email) {
+        err.email = "User with that email already exists";
+      }
+      return res.status(500).json({
+        message: "User already exists",
+        err
+      });
+    }
+
+    try{
     const hashedPassword = bcrypt.hashSync(password);
     const user = await User.create({ email, username, hashedPassword, firstname, lastname });
 
@@ -51,9 +74,15 @@ router.post(
 
     await setTokenCookie(res, safeUser);
 
-    return res.json({
+    return res.status(201).json({
       user: safeUser
     });
+    } catch (error) {
+      return res.status(500).json({
+        message: "Bad Request",
+        error,
+      });
+    }
   }
 );
 
