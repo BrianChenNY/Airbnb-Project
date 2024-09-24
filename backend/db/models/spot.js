@@ -57,11 +57,11 @@ module.exports = (sequelize, DataTypes) => {
         },
         min: {
           args: [-90],
-          msg: 'Latitude is not valid'
+          msg: 'Latitude must be within -90 and 90'
         },
         max: {
           args: [90],
-          msg: 'Latitude is not valid'
+          msg: 'Latitude must be within -90 and 90'
         }
       }
     },
@@ -74,11 +74,11 @@ module.exports = (sequelize, DataTypes) => {
         },
         min: {
           args: [-180],
-          msg: 'Longitude is not valid'
+          msg: 'Longitude must be within -180 and 180'
         },
         max: {
           args: [180],
-          msg: 'Longitude is not valid'
+          msg: 'Longitude must be within -180 and 180'
         }
       }
     },
@@ -107,7 +107,7 @@ module.exports = (sequelize, DataTypes) => {
         isDecimal: { msg: 'Price per day is required' },
         min: {
           args: [0],
-          msg: 'Price per day is required',
+          msg: 'Price per day must be a positive number',
         },
       },
     }

@@ -108,7 +108,7 @@ router.get('/:spotId', async(req,res) =>{
 })
 // Ziwen ^^^ -------------------------------------------------------------------------
 
-// // Create a Spot
+// Create a Spot
 // const validateSpot = [
 //     check('address')
 //         .notEmpty()
@@ -141,24 +141,59 @@ router.get('/:spotId', async(req,res) =>{
 //         .withMessage('Price per day is required'),
 //     handleValidationErrors
 //   ];
+  const validateSpot = [
+    check('address')
+      .notEmpty()
+      .withMessage('Street address is required'),
+    check('city')
+      .notEmpty()
+      .withMessage('City is required'),
+    check('state')
+      .notEmpty()
+      .withMessage('State is required'),
+    check('country')
+      .notEmpty()
+      .withMessage('Country is required'),
+    check('lat')
+      .isFloat({ min: -90, max: 90 })
+      .withMessage('Latitude must be within -90 and 90'),
+    check('lng')
+      .isFloat({ min: -180, max: 180 })
+      .withMessage('Longitude must be within -180 and 180'),
+    check('name')
+      .notEmpty()
+      .withMessage('Name is required')
+      .isLength({ max: 50 })
+      .withMessage('Name must be less than 50 characters'),
+    check('description')
+      .notEmpty()
+      .withMessage('Description is required'),
+    check('price')
+      .isFloat({ gt: 0 })
+      .withMessage('Price per day must be a positive number'),
+    handleValidationErrors
+  ];
+
+router.post('/', requireAuth, validateSpot, async (req, res) => {
+    try {
+        const newSpot = await Spot.create({
+          ownerId: req.user.id,
+          ...req.body
+        });
+        res.status(201).json(newSpot);
+    } catch (error) {
+        return res.status(400).json({
+          message: 'Bad request',
+          errors: error.message,
+        });
+        }
+    }
+);
 
 // router.post('/', requireAuth, validateSpot, async (req, res) => {
-//     try {
-//         const newSpot = await Spot.create({
-//           ownerId: req.user.id,
-//           ...req.body
-//         });
-//         res.status(201).json(newSpot);
-//     } catch (error) {
-//         return res.status(400).json({
-//           message: 'Bad request',
-//           errors: error.message,
-//         });
-//         }
-//     }
-// );
 
 
+// })
 
 
 
