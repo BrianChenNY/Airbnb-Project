@@ -288,8 +288,72 @@ router.delete('/:spotId', requireAuth, async (req, res) => {
 
 })
 
+// Get all Reviews by a Spot's id----------------------------------------------
+router.get('/:spotId/reviews', async (req,res) =>{
+    const spot = await Spot.findOne({
+        where:{
+            id: req.params.spotId
+        }
+    })
+    if(!spot){
+        return res.status(404).json( {"message": "Spot couldn't be found"} )
+    };
 
+    const Reviews = await Review.findAll({
+        where:{
+            spotId:req.params.spotId
+        },
+        include:[{ model:User, attributes: ['id','firstName','lastName']},
+        {model:ReviewImage, attributes: ['id','url']}
+]
+    })
+    res.json({Reviews})
+})
+//Ziwen ^^^------------------------------------------------------------------------
 
+// create review based on spot Id---------------------------------------------------
+const validateReview =[
+    check('review')
+    .notEmpty()
+    .withMessage('Review text is required'),
+  check('stars')
+    .isInt({ min: 1, max: 5 })
+    .withMessage('Stars must be an integer from 1 to 5'),
+    handleValidationErrors
+]
+router.post('/:spotId/reviews', requireAuth, validateReview, async(req,res) =>{
+    const spot = await Spot.findOne({
+        where:{
+            id: req.params.spotId
+        }
+    })
+    if(!spot){
+        return res.status(404).json( {"message": "Spot couldn't be found"} )
+    };
+    
+    const Reviews = await Review.findAll({
+        where:{
+            spotId:req.params.spotId
+        },
+        attributes:['userId']
+    })
+    for (const review of Reviews) {
+        if ( req.user.id == review.userId){
+            return res.status(500).json({
+                message: "User already has a review for this spot"
+            })
+        }
+    }
+
+    const newReview = await Review.create({
+        userId:req.user.id,
+        spotId:req.params.spotId,
+        ...req.body
+    })
+    res.status(201).json(newReview)
+
+})
+//Ziwen ^^^------------------------------------------------------------------------
 
 
 
