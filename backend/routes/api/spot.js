@@ -354,6 +354,72 @@ router.post('/:spotId/reviews', requireAuth, validateReview, async(req,res) =>{
 })
 //Ziwen ^^^------------------------------------------------------------------------
 
+//Get all Bookings for a Spot based on the Spot's id-------------------------------
+router.get('/:spotId/bookings', requireAuth , async (req,res)=>{
+    //!refactor
+    const spot = await Spot.findOne({
+        where:{
+            id: req.params.spotId
+        }
+    })
+    if(!spot){
+        return res.status(404).json( {"message": "Spot couldn't be found"} )
+    };
+    //!
+    //! refactor check if it's owner
+    const userId = req.user.id
+    // console.log('userID',userId)
+    const targetSpot = await Spot.findOne({
+        where:{id : req.params.spotId}
+    })
+    const spotOwnerId = targetSpot.toJSON().ownerId
+    // console.log('spot Owner ID',spotOwnerId)
+    //!
+    if(userId == spotOwnerId){
+        const Bookings = await Booking.findAll({
+            where:{userId:userId},
+            include:[{model:User, attributes:['id','firstName','lastName']}],
+        })
+        res.json({Bookings})
+    }
+    if(userId !== spotOwnerId){
+        const Bookings = await Booking.findAll({
+            where:{userId:userId},
+            attributes:["spotId","startDate","endDate"]
+        })
+        res.json({Bookings})
+    }
+})
+//---------------------------------------------------------------------------------------
+
+//Create a Booking from a Spot based on the Spot's id-----------------------------------
+router.post('/:spotId/bookings' , requireAuth, async (req,res) =>{
+    //!refactor
+    const spot = await Spot.findOne({
+        where:{
+            id: req.params.spotId
+        }
+    })
+    if(!spot){
+        return res.status(404).json( {"message": "Spot couldn't be found"} )
+    };
+    //!
+    const userId = req.user.id
+    // console.log('userID',userId)
+    const targetSpot = await Spot.findOne({
+        where:{id : req.params.spotId}
+    })
+    const spotOwnerId = targetSpot.toJSON().ownerId
+    // console.log('spot Owner ID',spotOwnerId)
+    if(userId == spotOwnerId){
+        return res.status(403).json({ "message": "Spot must NOT belong to the current user" })
+    }
+    const newBooking = await Booking.create({})
+
+
+})
+//---------------------------------------------------------------------------------------
+
 
 
 
