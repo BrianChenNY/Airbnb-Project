@@ -107,70 +107,70 @@ router.get('/:spotId', async(req,res) =>{
 // Ziwen ^^^ -------------------------------------------------------------------------
 
 // Create a Spot-------------------------------------------------------------------------
-// const validateSpot = [
-//     check('address')
-//         .notEmpty()
-//         .withMessage('Street address is required'),
-//     check('city')
-//         .notEmpty()
-//         .withMessage('City is required'),
-//     check('state')
-//         .notEmpty()
-//         .withMessage('State is required'),
-//     check('country')
-//         .notEmpty()
-//         .withMessage('Country is required'),
-//     check('lat')
-//         .notEmpty()
-//         .withMessage('Latitude is not valid'),
-//     check('lng')
-//         .notEmpty()
-//         .withMessage('Longitude is not valid'),
-//     check('name')
-//         .notEmpty()
-//         .withMessage('Name is required')
-//         .isLength({ max: 50 })
-//         .withMessage('Name must be less than 50 characters'),
-//     check('description')
-//         .notEmpty()
-//         .withMessage('Description is required'),
-//     check('price')
-//         .notEmpty()
-//         .withMessage('Price per day is required'),
-//     handleValidationErrors
-//   ];
-  const validateSpot = [
+const validateSpot = [
     check('address')
-      .notEmpty()
-      .withMessage('Street address is required'),
+        .notEmpty()
+        .withMessage('Street address is required'),
     check('city')
-      .notEmpty()
-      .withMessage('City is required'),
+        .notEmpty()
+        .withMessage('City is required'),
     check('state')
-      .notEmpty()
-      .withMessage('State is required'),
+        .notEmpty()
+        .withMessage('State is required'),
     check('country')
-      .notEmpty()
-      .withMessage('Country is required'),
+        .notEmpty()
+        .withMessage('Country is required'),
     check('lat')
-      .isFloat({ min: -90, max: 90 })
-      .withMessage('Latitude must be within -90 and 90'),
+        .notEmpty()
+        .withMessage('Latitude is not valid'),
     check('lng')
-      .isFloat({ min: -180, max: 180 })
-      .withMessage('Longitude must be within -180 and 180'),
+        .notEmpty()
+        .withMessage('Longitude is not valid'),
     check('name')
-      .notEmpty()
-      .withMessage('Name is required')
-      .isLength({ max: 50 })
-      .withMessage('Name must be less than 50 characters'),
+        .notEmpty()
+        .withMessage('Name is required')
+        .isLength({ max: 50 })
+        .withMessage('Name must be less than 50 characters'),
     check('description')
-      .notEmpty()
-      .withMessage('Description is required'),
+        .notEmpty()
+        .withMessage('Description is required'),
     check('price')
-      .isFloat({ gt: 0 })
-      .withMessage('Price per day must be a positive number'),
+        .notEmpty()
+        .withMessage('Price per day is required'),
     handleValidationErrors
   ];
+//   const validateSpot = [
+//     check('address')
+//       .notEmpty()
+//       .withMessage('Street address is required'),
+//     check('city')
+//       .notEmpty()
+//       .withMessage('City is required'),
+//     check('state')
+//       .notEmpty()
+//       .withMessage('State is required'),
+//     check('country')
+//       .notEmpty()
+//       .withMessage('Country is required'),
+//     check('lat')
+//       .isFloat({ min: -90, max: 90 })
+//       .withMessage('Latitude must be within -90 and 90'),
+//     check('lng')
+//       .isFloat({ min: -180, max: 180 })
+//       .withMessage('Longitude must be within -180 and 180'),
+//     check('name')
+//       .notEmpty()
+//       .withMessage('Name is required')
+//       .isLength({ max: 50 })
+//       .withMessage('Name must be less than 50 characters'),
+//     check('description')
+//       .notEmpty()
+//       .withMessage('Description is required'),
+//     check('price')
+//       .isFloat({ gt: 0 })
+//       .withMessage('Price per day must be a positive number'),
+//     handleValidationErrors
+//   ];
 
 router.post('/', requireAuth, validateSpot, async (req, res) => {
     try {
@@ -192,7 +192,6 @@ router.post('/', requireAuth, validateSpot, async (req, res) => {
 
 // Add an Image to a Spot based on the Spot's id---------------------------------------
 router.post('/:spotId/images', requireAuth, async (req, res) => {
-    //authorization
     const userId = req.user.id
     const spot = await Spot.findOne({
         where:{
