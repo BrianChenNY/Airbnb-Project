@@ -4,7 +4,7 @@ const router = express.Router();
 const { Op } = require('sequelize');
 const jwt = require('jsonwebtoken');
 
-// Add average rating and preview image urls to current query------------------------------------
+// Add average rating and preview image urls to current query------------------------
 const addAvgRatingAndPreviewImage = {
     attributes: {
         include: [
@@ -26,10 +26,10 @@ const addAvgRatingAndPreviewImage = {
       ],
     group: ['Spot.id', 'SpotImages.id'],
 }
-// Ziwen ^^^------------------------------------------------------------------------
+// Ziwen ^^^-------------------------------------------------------------------
 
 
-// Authentication Test---------------------------------------------------------
+// Authentication Test-------------------------------------------------------
 let authenticationTest = function(req){
     let token = req.cookies.token;
     if (!token) {
@@ -41,7 +41,7 @@ let authenticationTest = function(req){
     // console.log(payload)
     let verifiedPayload = jwt.verify(token, secret)
 }
-// Ziwen ^^^------------------------------------------------------------------
+// Ziwen ^^^----------------------------------------------------------------
 
 // get all spots--------------------------------------------------------------
 router.get('/', async (req, res) => {
