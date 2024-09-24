@@ -21,7 +21,7 @@ module.exports = {
         lng: 100,
         name: 'test name',
         description: 'test description',
-        price: 500,
+        price: 100,
       },
       {
         ownerId: 2,
@@ -33,16 +33,64 @@ module.exports = {
         lng: 100,
         name: 'test name',
         description: 'test description',
+        price: 200,
+      },
+      {
+        ownerId: 3,
+        address: '333 test street',
+        city: 'Duluth',
+        state: 'GA',
+        country: 'United States',
+        lat: 50,
+        lng: 100,
+        name: 'test name',
+        description: 'test description',
+        price: 300,
+      },
+      {
+        ownerId: 4,
+        address: '444 test street',
+        city: 'Duluth',
+        state: 'GA',
+        country: 'United States',
+        lat: 50,
+        lng: 100,
+        name: 'test name',
+        description: 'test description',
+        price: 400,
+      },
+      {
+        ownerId: 5,
+        address: '555 test street',
+        city: 'Duluth',
+        state: 'GA',
+        country: 'United States',
+        lat: 50,
+        lng: 100,
+        name: 'test name',
+        description: 'test description',
         price: 500,
+      },
+      {
+        ownerId: 1,
+        address: '666 test street',
+        city: 'Duluth',
+        state: 'GA',
+        country: 'United States',
+        lat: 50,
+        lng: 100,
+        name: 'test name',
+        description: 'test description',
+        price: 300,
       }
-    ])
+    ], { validate: true })
   },
 
   async down (queryInterface, Sequelize) {
     options.tableName = 'Spots';
     const Op = Sequelize.Op;
     return queryInterface.bulkDelete(options, {
-      ownerId: { [Op.in]: [1,2] }
+      ownerId: { [Op.in]: [1,2,3,4,5] }
     }, {});
   }
 };
