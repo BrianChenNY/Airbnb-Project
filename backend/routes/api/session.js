@@ -84,8 +84,8 @@ router.post('/', async (req, res, next) => {
     // Ziwen ^^^ -------------------------------------------------------------------------
     const safeUser = {
       id: user.id,
-      firstname: user.firstname,
-      lastname: user.lastname,
+      firstName: user.firstName,
+      lastName: user.lastName,
       email: user.email,
       username: user.username,
     };
@@ -115,8 +115,8 @@ router.get(
         const safeUser = {
           id: user.id,
           email: user.email,
-          firstname:user.firstname,
-          lastname:user.lastname,
+          firstName:user.firstName,
+          lastName:user.lastName,
           username: user.username,
         };
         return res.json({
