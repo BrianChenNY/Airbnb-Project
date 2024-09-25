@@ -245,8 +245,8 @@ router.put('/:spotId', requireAuth, validateSpot, async (req, res) => {
     spot.city = city;
     spot.state = state;
     spot.country = country;
-    spot.lat = 'lat';
-    spot.lng = 'lng';
+    spot.lat = lat;
+    spot.lng = lng;
     spot.name = name;
     spot.description = description;
     spot.price = price;
@@ -346,7 +346,7 @@ router.post('/:spotId/reviews', requireAuth, validateReview, async(req,res) =>{
 
     const newReview = await Review.create({
         userId:req.user.id,
-        spotId:req.params.spotId,
+        spotId:Number(req.params.spotId),
         ...req.body
     })
     res.status(201).json(newReview)
