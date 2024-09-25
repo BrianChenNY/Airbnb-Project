@@ -19,7 +19,8 @@ module.exports = (sequelize, DataTypes) => {
       references:{
         model:'Users',
         key:'id'
-      }
+      },
+      onDelete: 'CASCADE'
     },
     address: {
       type: DataTypes.STRING,
