@@ -6,18 +6,28 @@ module.exports = (sequelize, DataTypes) => {
   class Booking extends Model {
     static associate(models) {
       // define association here
-      Booking.belongsTo(models.User, { foreignKey: "userId" });
-      Booking.belongsTo(models.Spot, { foreignKey: "spotId" });
+      Booking.belongsTo(models.User, { foreignKey: "userId", onDelete: 'CASCADE'});
+      Booking.belongsTo(models.Spot, { foreignKey: "spotId", onDelete: 'CASCADE' });
     }
   }
   Booking.init({
-    spotId:{
-      type: DataTypes.STRING,
+    spotId: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: 'Spots',
+        key: 'id',
+      },
       allowNull: false,
+      onDelete: 'CASCADE',
     },
-    userId:{
-      type: DataTypes.STRING,
+    userId: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: 'Users',
+        key: 'id',
+      },
       allowNull: false,
+      onDelete: 'CASCADE', 
     },
     startDate:{
       type: DataTypes.DATE,
