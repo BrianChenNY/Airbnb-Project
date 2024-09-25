@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
   class ReviewImage extends Model {
     static associate(models) {
       // define association here
-      ReviewImage.belongsTo(models.Review, { foreignKey:"reviewId"});
+      ReviewImage.belongsTo(models.Review, { foreignKey:"reviewId", onDelete: 'CASCADE'});
     }
   }
 
@@ -14,6 +14,11 @@ module.exports = (sequelize, DataTypes) => {
     reviewId:{
       type:DataTypes.INTEGER,
       allowNull: false,
+      references:{
+        model:'Reviews',
+        key:'id'
+      },
+      onDelete: 'CASCADE',
     },
     url:{
       type: DataTypes.STRING,
