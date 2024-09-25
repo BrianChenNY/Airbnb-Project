@@ -89,7 +89,7 @@ router.put('/:bookingId', requireAuth , async (req,res) =>{
                 errors
             })
         }
-        else if(bookingEndDate.toISOString() === bookingJson.endDate.toISOString()){
+        else if(bookingEndDate.toISOString() === bookingJson.endDate.toISOString() || bookingEndDate.toISOString() === bookingJson.startDate.toISOString()){
             let errors = {}
             errors.endDate ="End date conflicts with an existing booking"
             return res.status(403).json({
@@ -97,7 +97,7 @@ router.put('/:bookingId', requireAuth , async (req,res) =>{
                 errors
             })
         }
-        else if(bookingStartDate.toISOString() === bookingJson.startDate.toISOString()){
+        else if(bookingStartDate.toISOString() === bookingJson.startDate.toISOString() || bookingStartDate.toISOString() === bookingJson.endDate.toISOString()){
             let errors = {}
             errors.startDate ="Start date conflicts with an existing booking"
             return res.status(403).json({
