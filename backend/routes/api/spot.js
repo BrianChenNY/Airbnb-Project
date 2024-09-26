@@ -37,16 +37,16 @@ const addAvgRatingAndPreviewImage = {
         [
           Sequelize.literal(`(
             SELECT AVG("Reviews"."stars")
-            FROM "Reviews"
-            WHERE "Reviews"."spotId" = "Spot"."id"
+            FROM "${process.env.SCHEMA}"."Reviews"
+            WHERE "${process.env.SCHEMA}"."Reviews"."spotId" = "Spot"."id"
           )`),
           'avgRating'
         ],
         [
           Sequelize.literal(`(
             SELECT "url"
-            FROM "SpotImages"
-            WHERE "SpotImages"."spotId" = "Spot"."id" AND "SpotImages"."preview" = true
+            FROM "${process.env.SCHEMA}"."SpotImages"
+            WHERE "${process.env.SCHEMA}"."SpotImages"."spotId" = "Spot"."id" AND "${process.env.SCHEMA}"."SpotImages"."preview" = true
             LIMIT 1
           )`),
           'previewImage'
@@ -124,16 +124,16 @@ router.get('/:spotId', async (req, res) => {
                     [
                         Sequelize.literal(`(
                             SELECT COUNT("Reviews"."id")
-                            FROM "Reviews"
-                            WHERE "Reviews"."spotId" = "Spot"."id"
+                            FROM "${process.env.SCHEMA}"."Reviews"
+                            WHERE "${process.env.SCHEMA}"."Reviews"."spotId" = "Spot"."id"
                         )`),
                         'numReviews'
                     ],
                     [
                         Sequelize.literal(`(
                             SELECT AVG("Reviews"."stars")
-                            FROM "Reviews"
-                            WHERE "Reviews"."spotId" = "Spot"."id"
+                            FROM "${process.env.SCHEMA}"."Reviews"
+                            WHERE "${process.env.SCHEMA}"."Reviews"."spotId" = "Spot"."id"
                         )`),
                         'avgStarRating'
                     ]
