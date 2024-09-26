@@ -6,32 +6,72 @@ const jwt = require('jsonwebtoken');
 const { requireAuth } = require('../../utils/auth');
 const { check } = require('express-validator');
 const { handleValidationErrors } = require('../../utils/validation');
+const { SELECT } = require('sequelize/lib/query-types');
 
 // Add average rating and preview image urls to current query------------------------
+// const addAvgRatingAndPreviewImage = {
+//     attributes: {
+//         include: [
+//           [Sequelize.fn('AVG', Sequelize.col('Reviews.stars')), 'avgRating'],   //add avgRating to each spot from reviews
+//           [Sequelize.col('SpotImages.url'), 'previewImage']  //add previewImage's url from spotImages column
+//         ]
+//       },
+//       include: [
+//         {
+//             model: Review, // Include the Review model to calculate the average
+//             attributes: [] // No need to fetch all review attributes, just calculate average
+//         },
+//         {
+//             model: SpotImage, // Include the SpotImage model to get the image URL
+//             attributes: [], // No need to fetch all image attributes, just include the URL
+//             where: { preview: true },  // Only get the preview image
+//             required: false // Allow spots without images
+//         }
+//       ],
+//     group: ['Spot.id', 'SpotImages.id'],
+// }
+// Ziwen ^^^-------------------------------------------------------------------
 const addAvgRatingAndPreviewImage = {
     attributes: {
-        include: [
-          [Sequelize.fn('AVG', Sequelize.col('Reviews.stars')), 'avgRating'],   //add avgRating to each spot from reviews
-          [Sequelize.col('SpotImages.url'), 'previewImage']  //add previewImage's url from spotImages column
-        ]
-      },
       include: [
-        {
-            model: Review, // Include the Review model to calculate the average
-            attributes: [] // No need to fetch all review attributes, just calculate average
-        },
-        {
-            model: SpotImage, // Include the SpotImage model to get the image URL
-            attributes: [], // No need to fetch all image attributes, just include the URL
-            where: { preview: true },  // Only get the preview image
-            required: false // Allow spots without images
-        }
-      ],
-    group: ['Spot.id', 'SpotImages.id'],
-}
-// Ziwen ^^^-------------------------------------------------------------------
-
-
+        [
+          Sequelize.literal(`(
+            SELECT AVG("Reviews"."stars")
+            FROM "Reviews"
+            WHERE "Reviews"."spotId" = "Spot"."id"
+          )`),
+          'avgRating'
+        ],
+        [
+          Sequelize.literal(`(
+            SELECT "url"
+            FROM "SpotImages"
+            WHERE "SpotImages"."spotId" = "Spot"."id" AND "SpotImages"."preview" = true
+            LIMIT 1
+          )`),
+          'previewImage'
+        ]
+      ]
+    },
+  };
+// const results = await sequelize.query(
+//     `SELECT 
+//         Spot.*, 
+//         AVG(Reviews.stars) AS avgRating, 
+//         SpotImages.url AS previewImage
+//      FROM 
+//         Spots AS Spot
+//      LEFT JOIN 
+//         Reviews ON Spot.id = Reviews.spotId
+//      LEFT JOIN 
+//         SpotImages ON Spot.id = SpotImages.spotId 
+//         AND SpotImages.preview = true
+//      GROUP BY 
+//         Spot.id, SpotImages.id;`,
+//     {
+//       type: Sequelize.QueryTypes.SELECT // Specify that we are performing a SELECT query
+//     }
+// )
 // Authorization Test by spotId belongs to current user------------------------
 // const authorizationTest = async function(req, res, next) {
 //     const userId = req.user.id;
@@ -53,8 +93,8 @@ const addAvgRatingAndPreviewImage = {
 
 // get all spots--------------------------------------------------------------
 router.get('/', async (req, res) => {
-    const spots = await Spot.findAll({...addAvgRatingAndPreviewImage});
-    res.json({ spots });
+    const Spots = await Spot.findAll({...addAvgRatingAndPreviewImage});
+    res.json({ Spots });
   });
 
 // Ziwen ^^^----------------------------------------------------------------------
@@ -73,37 +113,54 @@ router.get('/current', requireAuth, async (req,res) =>{
 // Ziwen ^^^--------------------------------------------------------------------------
 
 // Get details of a Spot from an id---------------------------------------------------
-router.get('/:spotId', async(req,res) =>{
-    const spotId = req.params.spotId
+router.get('/:spotId', async (req, res) => {
+    const spotId = req.params.spotId;
+
     try {
         const spot = await Spot.findOne({
-            where:{id:spotId},
-            attributes:{
+            where: { id: spotId },
+            attributes: {
                 include: [
-                    [Sequelize.fn('COUNT', Sequelize.col('Reviews.stars')), 'numReviews'],
-                    [Sequelize.fn('AVG', Sequelize.col('Reviews.stars')), 'avgRating']
+                    [
+                        Sequelize.literal(`(
+                            SELECT COUNT("Reviews"."id")
+                            FROM "Reviews"
+                            WHERE "Reviews"."spotId" = "Spot"."id"
+                        )`),
+                        'numReviews'
+                    ],
+                    [
+                        Sequelize.literal(`(
+                            SELECT AVG("Reviews"."stars")
+                            FROM "Reviews"
+                            WHERE "Reviews"."spotId" = "Spot"."id"
+                        )`),
+                        'avgStarRating'
+                    ]
                 ]
             },
-            include:[
-                {model:Review, attributes:[]},
-                {model:SpotImage, attributes:['id','url','preview']},
+            include: [
                 {
-                model: User,
-                as: 'Owner', 
-                attributes: ['id', 'firstName', 'lastName']
+                    model: SpotImage,
+                    attributes: ['id', 'url', 'preview']
+                },
+                {
+                    model: User,
+                    as: 'Owner',
+                    attributes: ['id', 'firstName', 'lastName']
                 }
-            ],
-            group: ['Spot.id', 'SpotImages.id', 'Owner.id']
-        })
-        if(!spot){
-            return res.status(404).json({ message:"Spot couldn't be found" })
+            ]
+        });
+
+        if (!spot) {
+            return res.status(404).json({ message: "Spot couldn't be found" });
         }
-        res.json({spot})
+
+        res.json(spot);
     } catch (error) {
-        return res.status(404).json({ message:"Spot couldn't be found" })
+        return res.status(404).json({ message: "Spot couldn't be found" });
     }
-    
-})
+});
 // Ziwen ^^^ -------------------------------------------------------------------------
 
 // Create a Spot-------------------------------------------------------------------------
