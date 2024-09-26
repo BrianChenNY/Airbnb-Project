@@ -93,21 +93,123 @@ const addAvgRatingAndPreviewImage = {
 //     next();
 // }
 // Ziwen ^^^----------------------------------------------------------------
+router.get('/',  async (req, res) => {
+    // Extract query parameters and apply defaults
+    let { page, size, minLat, maxLat, minLng, maxLng, minPrice, maxPrice } = req.query;
+    // Convert pagination values to integers
+    if(!page){page = 1};
+    if(!size){size = 20}
+
+    minLat = minLat ? parseFloat(minLat) : undefined;
+    maxLat = maxLat ? parseFloat(maxLat) : undefined;
+    minLng = minLng ? parseFloat(minLng) : undefined;
+    maxLng = maxLng ? parseFloat(maxLng) : undefined;
+    minPrice = minPrice ? parseFloat(minPrice) : undefined;
+    maxPrice = maxPrice ? parseFloat(maxPrice) : undefined;
+
+    // Error handling object for validation errors
+    const validationErrors = {};
+    
+    // Validate pagination values
+    if (isNaN(page)|| page < 1) {
+        validationErrors.page = 'Page must be greater than or equal to 1';
+    }
+    if (isNaN(size) || size < 1 || size > 20) {
+        validationErrors.size = 'Size must be between 1 and 20';
+    }
+
+    // Validate latitudes and longitudes
+    if (minLat && (minLat < -90 || minLat > 90)) {
+        validationErrors.minLat = 'Minimum latitude is invalid';
+    }
+    if (maxLat && (maxLat < -90 || maxLat > 90)) {
+        validationErrors.maxLat = 'Maximum latitude is invalid';
+    }
+    console.log('min',minLng,'isnan',isNaN(minLng))
+    console.log('max',maxLng,'isnan',isNaN(maxLng))
+
+    if ( minLng && (minLng < -180 || minLng > 180)) {
+        validationErrors.minLng = 'Minimum longitude is invalid';
+    }
+    if (maxLng && (maxLng < -180 || maxLng > 180)) {
+        validationErrors.maxLng = 'Maximum longitude is invalid';
+    }
+
+    // Validate prices
+    if (minPrice !== undefined && minPrice < 0) {
+        validationErrors.minPrice = 'Minimum price must be greater than or equal to 0';
+    }
+    if (maxPrice !== undefined && maxPrice < 0) {
+        validationErrors.maxPrice = 'Maximum price must be greater than or equal to 0';
+    }
+
+    // If there are validation errors, return a 400 Bad Request
+    if (Object.keys(validationErrors).length > 0) {
+        console.log(Object.keys(validationErrors))
+        return res.status(400).json({
+            message: 'Bad Request',
+            errors: validationErrors
+        });
+    }
+
+    // Validate pagination values
+    // if (page < 1) page = 1;
+    // if (size < 1 || size > 20) size = 20;
+
+    // Build where clause based on query parameters
+    const where = {};
+    if (minLat) where.lat = { [Op.gte]: parseFloat(minLat) };
+    if (maxLat) where.lat = { ...where.lat, [Op.lte]: parseFloat(maxLat) };
+    if (minLng) where.lng = { [Op.gte]: parseFloat(minLng) };
+    if (maxLng) where.lng = { ...where.lng, [Op.lte]: parseFloat(maxLng) };
+    if (minPrice) where.price = { [Op.gte]: parseFloat(minPrice) };
+    if (maxPrice) where.price = { ...where.price, [Op.lte]: parseFloat(maxPrice) };
+
+    const options = {
+        where,
+        ...addAvgRatingAndPreviewImage
+    }
+    if(page && size && !isNaN(page) && !isNaN(size)){
+        page = parseInt(page);
+        size = parseInt(size);
+        options.limit = size,
+        options.offset = (page - 1) * size
+    }
+
+    try {
+        // Fetch filtered spots with pagination and ratings/images
+        const spots = await Spot.findAll(options);
+
+        // Return the spots and pagination info
+        res.status(200).json({
+            Spots: spots,
+            page,
+            size
+        });
+    } catch (error) {
+        res.status(400).json({
+            message: 'Bad Request',
+            errors: error.message
+        });
+    }
+});
+
 
 // get all spots--------------------------------------------------------------
-router.get('/', async (req, res) => {
-    const Spots = await Spot.findAll({...addAvgRatingAndPreviewImage});
+// router.get('/', async (req, res) => {
+//     const Spots = await Spot.findAll({...addAvgRatingAndPreviewImage});
 
-    const changeToNum = Spots.map(spot => ({
-        ...spot.toJSON(),
-        lat: Number(spot.lat), 
-        lng: Number(spot.lng) 
-    }));
+//     const changeToNum = Spots.map(spot => ({
+//         ...spot.toJSON(),
+//         lat: Number(spot.lat), 
+//         lng: Number(spot.lng),
+//         price: Number(spot.price)
+//     }));
 
 
 
-    res.json({ Spots:changeToNum });
-  });
+//     res.json({ Spots:changeToNum });
+//   });
 
 // Ziwen ^^^----------------------------------------------------------------------
 
