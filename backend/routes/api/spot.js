@@ -101,7 +101,8 @@ router.get('/', async (req, res) => {
     const changeToNum = Spots.map(spot => ({
         ...spot.toJSON(),
         lat: Number(spot.lat), 
-        lng: Number(spot.lng) 
+        lng: Number(spot.lng),
+        price: Number(spot.price)
     }));
 
 
