@@ -11,29 +11,7 @@ const dialect = sequelize.getDialect()
 const schema = process.env.SCHEMA;
 const mode = dialect === 'postgres' && schema ? `"${schema}".` : '';
 
-// Add average rating and preview image urls to current query------------------------
-// const addAvgRatingAndPreviewImage = {
-//     attributes: {
-//         include: [
-//           [Sequelize.fn('AVG', Sequelize.col('Reviews.stars')), 'avgRating'],   //add avgRating to each spot from reviews
-//           [Sequelize.col('SpotImages.url'), 'previewImage']  //add previewImage's url from spotImages column
-//         ]
-//       },
-//       include: [
-//         {
-//             model: Review, // Include the Review model to calculate the average
-//             attributes: [] // No need to fetch all review attributes, just calculate average
-//         },
-//         {
-//             model: SpotImage, // Include the SpotImage model to get the image URL
-//             attributes: [], // No need to fetch all image attributes, just include the URL
-//             where: { preview: true },  // Only get the preview image
-//             required: false // Allow spots without images
-//         }
-//       ],
-//     group: ['Spot.id', 'SpotImages.id'],
-// }
-// Ziwen ^^^-------------------------------------------------------------------
+
 const addAvgRatingAndPreviewImage = {
     attributes: {
       include: [
@@ -57,106 +35,152 @@ const addAvgRatingAndPreviewImage = {
       ]
     },
   };
-// const results = await sequelize.query(
-//     `SELECT 
-//         Spot.*, 
-//         AVG(Reviews.stars) AS avgRating, 
-//         SpotImages.url AS previewImage
-//      FROM 
-//         Spots AS Spot
-//      LEFT JOIN 
-//         Reviews ON Spot.id = Reviews.spotId
-//      LEFT JOIN 
-//         SpotImages ON Spot.id = SpotImages.spotId 
-//         AND SpotImages.preview = true
-//      GROUP BY 
-//         Spot.id, SpotImages.id;`,
-//     {
-//       type: Sequelize.QueryTypes.SELECT // Specify that we are performing a SELECT query
+
+// router.get('/',  async (req, res) => {
+//     // Extract query parameters and apply defaults
+//     let { page, size, minLat, maxLat, minLng, maxLng, minPrice, maxPrice } = req.query;
+//     // Convert pagination values to integers
+//     if(!page){page = 1};
+//     if(!size){size = 20}
+
+//     minLat = minLat ? parseFloat(minLat) : undefined;
+//     maxLat = maxLat ? parseFloat(maxLat) : undefined;
+//     minLng = minLng ? parseFloat(minLng) : undefined;
+//     maxLng = maxLng ? parseFloat(maxLng) : undefined;
+//     minPrice = minPrice ? parseFloat(minPrice) : undefined;
+//     maxPrice = maxPrice ? parseFloat(maxPrice) : undefined;
+
+//     // Error handling object for validation errors
+//     const validationErrors = {};
+    
+//     // Validate pagination values
+//     if (isNaN(page)|| page < 1) {
+//         validationErrors.page = 'Page must be greater than or equal to 1';
 //     }
-// )
-// Authorization Test by spotId belongs to current user------------------------
-// const authorizationTest = async function(req, res, next) {
-//     const userId = req.user.id;
-//     const spot = await Spot.findOne({
-//         where: { id: req.params.spotId }
+//     if (isNaN(size) || size < 1 || size > 20) {
+//         validationErrors.size = 'Size must be between 1 and 20';
+//     }
+
+//     // Validate latitudes and longitudes
+//     if (minLat && (minLat < -90 || minLat > 90)) {
+//         validationErrors.minLat = 'Minimum latitude is invalid';
+//     }
+//     if (maxLat && (maxLat < -90 || maxLat > 90)) {
+//         validationErrors.maxLat = 'Maximum latitude is invalid';
+//     }
+//     console.log('min',minLng,'isnan',isNaN(minLng))
+//     console.log('max',maxLng,'isnan',isNaN(maxLng))
+
+//     if ( minLng && (minLng < -180 || minLng > 180)) {
+//         validationErrors.minLng = 'Minimum longitude is invalid';
+//     }
+//     if (maxLng && (maxLng < -180 || maxLng > 180)) {
+//         validationErrors.maxLng = 'Maximum longitude is invalid';
+//     }
+
+//     // Validate prices
+//     if (minPrice !== undefined && minPrice < 0) {
+//         validationErrors.minPrice = 'Minimum price must be greater than or equal to 0';
+//     }
+//     if (maxPrice !== undefined && maxPrice < 0) {
+//         validationErrors.maxPrice = 'Maximum price must be greater than or equal to 0';
+//     }
+
+//     // If there are validation errors, return a 400 Bad Request
+//     if (Object.keys(validationErrors).length > 0) {
+//         console.log(Object.keys(validationErrors))
+//         return res.status(400).json({
+//             message: 'Bad Request',
+//             errors: validationErrors
 //         });
-//     // Check if the spot exists
-//     if (!spot) {
-//         return res.status(404).json({ "message": "Spot couldn't be found" });
 //     }
-//     // Check if user is the owner of the spot
-//     const spotOwnerId = spot.ownerId;
-//     if (userId !== spotOwnerId) {
-//         return res.status(403).json({ "message": "Forbidden" });
+
+//     // Validate pagination values
+//     // if (page < 1) page = 1;
+//     // if (size < 1 || size > 20) size = 20;
+
+//     // Build where clause based on query parameters
+//     const where = {};
+//     if (minLat) where.lat = { [Op.gte]: parseFloat(minLat) };
+//     if (maxLat) where.lat = { ...where.lat, [Op.lte]: parseFloat(maxLat) };
+//     if (minLng) where.lng = { [Op.gte]: parseFloat(minLng) };
+//     if (maxLng) where.lng = { ...where.lng, [Op.lte]: parseFloat(maxLng) };
+//     if (minPrice) where.price = { [Op.gte]: parseFloat(minPrice) };
+//     if (maxPrice) where.price = { ...where.price, [Op.lte]: parseFloat(maxPrice) };
+
+//     const options = {
+//         where,
+//         ...addAvgRatingAndPreviewImage
 //     }
-//     next();
-// }
-// Ziwen ^^^----------------------------------------------------------------
-router.get('/',  async (req, res) => {
-    // Extract query parameters and apply defaults
+//     if(page && size && !isNaN(page) && !isNaN(size)){
+//         page = parseInt(page);
+//         size = parseInt(size);
+//         options.limit = size,
+//         options.offset = (page - 1) * size
+//     }
+
+//     try {
+//         // Fetch filtered spots with pagination and ratings/images
+//         const spots = await Spot.findAll(options);
+
+//         // Return the spots and pagination info
+//         res.status(200).json({
+//             Spots: spots,
+//             page,
+//             size
+//         });
+//     } catch (error) {
+//         res.status(400).json({
+//             message: 'Bad Request',
+//             errors: error.message
+//         });
+//     }
+// });
+
+  const validateQuery = [
+    check('page')
+    .optional()
+    .isInt({min:1}).withMessage('Page must be greater than or equal to 1'),
+    check('size')
+    .optional()
+    .isInt({min:1}).withMessage('Size must be greater than or equal to 1'),
+
+    check('minLat')
+    .optional()
+      .isFloat()
+      .withMessage('Minimum latitude is invalid'),
+      check('maxLat')
+      .optional()
+      .isFloat()
+      .withMessage('Maximum latitude is invalid'),
+    check('minLng')
+    .optional()
+      .isFloat()
+      .withMessage('Minimum longitude is invalid'),
+      check('maxLng')
+      .optional()
+      .isFloat()
+      .withMessage('Maximum longitude is invalid'),
+
+    
+    check('minPrice')
+    .optional()
+      .isFloat({ gte: 0 })
+      .withMessage('Minimum price must be greater than or equal to 0'),
+      check('maxPrice')
+      .optional()
+      .isFloat({ gte: 0 })
+      .withMessage('Maximum price must be greater than or equal to 0'),
+    handleValidationErrors
+  ];
+
+// get all spots--------------------------------------------------------------
+router.get('/',validateQuery, async (req, res) => {
     let { page, size, minLat, maxLat, minLng, maxLng, minPrice, maxPrice } = req.query;
-    // Convert pagination values to integers
     if(!page){page = 1};
     if(!size){size = 20}
-
-    minLat = minLat ? parseFloat(minLat) : undefined;
-    maxLat = maxLat ? parseFloat(maxLat) : undefined;
-    minLng = minLng ? parseFloat(minLng) : undefined;
-    maxLng = maxLng ? parseFloat(maxLng) : undefined;
     minPrice = minPrice ? parseFloat(minPrice) : undefined;
     maxPrice = maxPrice ? parseFloat(maxPrice) : undefined;
-
-    // Error handling object for validation errors
-    const validationErrors = {};
-    
-    // Validate pagination values
-    if (isNaN(page)|| page < 1) {
-        validationErrors.page = 'Page must be greater than or equal to 1';
-    }
-    if (isNaN(size) || size < 1 || size > 20) {
-        validationErrors.size = 'Size must be between 1 and 20';
-    }
-
-    // Validate latitudes and longitudes
-    if (minLat && (minLat < -90 || minLat > 90)) {
-        validationErrors.minLat = 'Minimum latitude is invalid';
-    }
-    if (maxLat && (maxLat < -90 || maxLat > 90)) {
-        validationErrors.maxLat = 'Maximum latitude is invalid';
-    }
-    console.log('min',minLng,'isnan',isNaN(minLng))
-    console.log('max',maxLng,'isnan',isNaN(maxLng))
-
-    if ( minLng && (minLng < -180 || minLng > 180)) {
-        validationErrors.minLng = 'Minimum longitude is invalid';
-    }
-    if (maxLng && (maxLng < -180 || maxLng > 180)) {
-        validationErrors.maxLng = 'Maximum longitude is invalid';
-    }
-
-    // Validate prices
-    if (minPrice !== undefined && minPrice < 0) {
-        validationErrors.minPrice = 'Minimum price must be greater than or equal to 0';
-    }
-    if (maxPrice !== undefined && maxPrice < 0) {
-        validationErrors.maxPrice = 'Maximum price must be greater than or equal to 0';
-    }
-
-    // If there are validation errors, return a 400 Bad Request
-    if (Object.keys(validationErrors).length > 0) {
-        console.log(Object.keys(validationErrors))
-        return res.status(400).json({
-            message: 'Bad Request',
-            errors: validationErrors
-        });
-    }
-
-    // Validate pagination values
-    // if (page < 1) page = 1;
-    // if (size < 1 || size > 20) size = 20;
-
-    // Build where clause based on query parameters
     const where = {};
     if (minLat) where.lat = { [Op.gte]: parseFloat(minLat) };
     if (maxLat) where.lat = { ...where.lat, [Op.lte]: parseFloat(maxLat) };
@@ -164,7 +188,6 @@ router.get('/',  async (req, res) => {
     if (maxLng) where.lng = { ...where.lng, [Op.lte]: parseFloat(maxLng) };
     if (minPrice) where.price = { [Op.gte]: parseFloat(minPrice) };
     if (maxPrice) where.price = { ...where.price, [Op.lte]: parseFloat(maxPrice) };
-
     const options = {
         where,
         ...addAvgRatingAndPreviewImage
@@ -176,40 +199,24 @@ router.get('/',  async (req, res) => {
         options.offset = (page - 1) * size
     }
 
-    try {
-        // Fetch filtered spots with pagination and ratings/images
-        const spots = await Spot.findAll(options);
+    const Spots = await Spot.findAll(options);
+    // console.log(Spots[0].toJSON())
 
-        // Return the spots and pagination info
-        res.status(200).json({
-            Spots: spots,
-            page,
-            size
-        });
-    } catch (error) {
-        res.status(400).json({
-            message: 'Bad Request',
-            errors: error.message
-        });
-    }
-});
-
-
-// get all spots--------------------------------------------------------------
-// router.get('/', async (req, res) => {
-//     const Spots = await Spot.findAll({...addAvgRatingAndPreviewImage});
-
-//     const changeToNum = Spots.map(spot => ({
-//         ...spot.toJSON(),
-//         lat: Number(spot.lat), 
-//         lng: Number(spot.lng),
-//         price: Number(spot.price)
-//     }));
+    const changeToNum = Spots.map(spot => ({
+        ...spot.toJSON(),
+        lat: Number(spot.lat), 
+        lng: Number(spot.lng),
+        price: Number(spot.price)
+    }));
 
 
 
-//     res.json({ Spots:changeToNum });
-//   });
+    res.json({ 
+        Spots:changeToNum,
+        page,
+        size
+     });
+  });
 
 // Ziwen ^^^----------------------------------------------------------------------
 
@@ -310,38 +317,6 @@ const validateSpot = [
         .withMessage('Price per day is required'),
     handleValidationErrors
   ];
-//   const validateSpot = [
-//     check('address')
-//       .notEmpty()
-//       .withMessage('Street address is required'),
-//     check('city')
-//       .notEmpty()
-//       .withMessage('City is required'),
-//     check('state')
-//       .notEmpty()
-//       .withMessage('State is required'),
-//     check('country')
-//       .notEmpty()
-//       .withMessage('Country is required'),
-//     check('lat')
-//       .isFloat({ min: -90, max: 90 })
-//       .withMessage('Latitude must be within -90 and 90'),
-//     check('lng')
-//       .isFloat({ min: -180, max: 180 })
-//       .withMessage('Longitude must be within -180 and 180'),
-//     check('name')
-//       .notEmpty()
-//       .withMessage('Name is required')
-//       .isLength({ max: 50 })
-//       .withMessage('Name must be less than 50 characters'),
-//     check('description')
-//       .notEmpty()
-//       .withMessage('Description is required'),
-//     check('price')
-//       .isFloat({ gt: 0 })
-//       .withMessage('Price per day must be a positive number'),
-//     handleValidationErrors
-//   ];
 
 router.post('/', requireAuth, validateSpot, async (req, res) => {
     try {
