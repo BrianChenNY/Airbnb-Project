@@ -7,7 +7,7 @@ const { requireAuth } = require('../../utils/auth');
 const { check } = require('express-validator');
 const { handleValidationErrors } = require('../../utils/validation');
 const dialect = sequelize.getDialect()
-const schema = process.env.schema;
+const schema = process.env.SCHEMA;
 const mode = dialect === 'postgres' && schema ? `"${schema}".` : '';
 
 //Get all Reviews of the Current User--------------------------------------------------------
@@ -26,8 +26,8 @@ router.get('/current', requireAuth, async (req, res) => {
                             sequelize.literal(`(
                                 SELECT COALESCE((
                                     SELECT "url"
-                                    FROM "${mode}SpotImages"
-                                    WHERE "${mode}SpotImages"."spotId" = "Spot"."id" AND "${mode}SpotImages"."preview" = true
+                                    FROM ${mode}"SpotImages"
+                                    WHERE ${mode}"SpotImages"."spotId" = "Spot"."id" AND ${mode}"SpotImages"."preview" = true
                                     LIMIT 1
                                 ), 'no preview image')
                             )`),

@@ -8,7 +8,7 @@ const { check } = require('express-validator');
 const { handleValidationErrors } = require('../../utils/validation');
 const { SELECT } = require('sequelize/lib/query-types');
 const dialect = sequelize.getDialect()
-const schema = process.env.schema;
+const schema = process.env.SCHEMA;
 const mode = dialect === 'postgres' && schema ? `"${schema}".` : '';
 
 // Add average rating and preview image urls to current query------------------------
@@ -40,16 +40,16 @@ const addAvgRatingAndPreviewImage = {
         [
           Sequelize.literal(`(
             SELECT AVG("Reviews"."stars")
-            FROM "${mode}Reviews"
-            WHERE "${mode}Reviews"."spotId" = "Spot"."id"
+            FROM ${mode}"Reviews"
+            WHERE ${mode}"Reviews"."spotId" = "Spot"."id"
           )`),
           'avgRating'
         ],
         [
           Sequelize.literal(`(
             SELECT "url"
-            FROM "${mode}SpotImages"
-            WHERE "${mode}SpotImages"."spotId" = "Spot"."id" AND "${mode}SpotImages"."preview" = true
+            FROM ${mode}"SpotImages"
+            WHERE ${mode}"SpotImages"."spotId" = "Spot"."id" AND ${mode}"SpotImages"."preview" = true
             LIMIT 1
           )`),
           'previewImage'
@@ -136,16 +136,16 @@ router.get('/:spotId', async (req, res) => {
                     [
                         Sequelize.literal(`(
                             SELECT COUNT("Reviews"."id")
-                            FROM "${mode}Reviews"
-                            WHERE "${mode}Reviews"."spotId" = "Spot"."id"
+                            FROM ${mode}"Reviews"
+                            WHERE ${mode}"Reviews"."spotId" = "Spot"."id"
                         )`),
                         'numReviews'
                     ],
                     [
                         Sequelize.literal(`(
                             SELECT AVG("Reviews"."stars")
-                            FROM "${mode}Reviews"
-                            WHERE "${mode}Reviews"."spotId" = "Spot"."id"
+                            FROM ${mode}"Reviews"
+                            WHERE ${mode}"Reviews"."spotId" = "Spot"."id"
                         )`),
                         'avgStarRating'
                     ]
