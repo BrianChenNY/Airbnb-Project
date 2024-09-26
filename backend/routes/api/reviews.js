@@ -1,25 +1,48 @@
 const express = require('express');
 const { Spot, User, Booking, Review, ReviewImage, SpotImage, Sequelize } = require ('../../db/models')
 const router = express.Router();
-const { Op } = require('sequelize');
+const { Op, ExclusionConstraintError } = require('sequelize');
 const jwt = require('jsonwebtoken');
 const { requireAuth } = require('../../utils/auth');
 const { check } = require('express-validator');
 const { handleValidationErrors } = require('../../utils/validation');
 
 //Get all Reviews of the Current User--------------------------------------------------------
-router.get('/current', requireAuth, async (req,res) =>{
+router.get('/current', requireAuth, async (req, res) => {
     const Reviews = await Review.findAll({
-        where:{
-            userId:req.user.id
+        where: {
+            userId: req.user.id
         },
-        include:[{ model:User, attributes: ['id','firstName','lastName']},
-                {model:Spot},
-                {model:ReviewImage, attributes: ['id','url']}
+        include: [
+            { model: User, attributes: ['id', 'firstName', 'lastName']
+            },
+            {   model: Spot,
+                attributes: {
+                    include: [
+                        [
+                            Sequelize.literal(`(
+                                SELECT COALESCE((
+                                    SELECT "url"
+                                    FROM "SpotImages"
+                                    WHERE "SpotImages"."spotId" = "Spot"."id" AND "SpotImages"."preview" = true
+                                    LIMIT 1
+                                ), 'no preview image')
+                            )`),
+                            'previewImage'
+                        ]
+                    ],
+                    exclude: ['createdAt', 'description', 'updatedAt']
+                }
+            },
+            {
+                model: ReviewImage,
+                attributes: ['id', 'url']
+            }
         ]
-    })
-    res.json({Reviews})
-})
+    });
+    res.json({ Reviews });
+});
+
 //------------------------------------------------------------------------------------
 
 //Add an Image to a Review based on the Review's id------------------------------------
