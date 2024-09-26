@@ -1,5 +1,5 @@
 const express = require('express');
-const { Spot, User, Booking, Review, ReviewImage, SpotImage, Sequelize } = require ('../../db/models')
+const { Spot, User, Booking, Review, ReviewImage, SpotImage, Sequelize, sequelize } = require ('../../db/models')
 const router = express.Router();
 const { Op } = require('sequelize');
 const jwt = require('jsonwebtoken');
@@ -7,6 +7,9 @@ const { requireAuth } = require('../../utils/auth');
 const { check } = require('express-validator');
 const { handleValidationErrors } = require('../../utils/validation');
 const { SELECT } = require('sequelize/lib/query-types');
+const dialect = sequelize.getDialect()
+const schema = process.env.schema;
+const mode = dialect === 'postgres' && schema ? `"${schema}".` : '';
 
 // Add average rating and preview image urls to current query------------------------
 // const addAvgRatingAndPreviewImage = {
@@ -37,16 +40,16 @@ const addAvgRatingAndPreviewImage = {
         [
           Sequelize.literal(`(
             SELECT AVG("Reviews"."stars")
-            FROM "${process.env.SCHEMA}"."Reviews"
-            WHERE "${process.env.SCHEMA}"."Reviews"."spotId" = "Spot"."id"
+            FROM ${mode}"Reviews"
+            WHERE ${mode}"Reviews"."spotId" = "Spot"."id"
           )`),
           'avgRating'
         ],
         [
           Sequelize.literal(`(
             SELECT "url"
-            FROM "${process.env.SCHEMA}"."SpotImages"
-            WHERE "${process.env.SCHEMA}"."SpotImages"."spotId" = "Spot"."id" AND "${process.env.SCHEMA}"."SpotImages"."preview" = true
+            FROM ${mode}"SpotImages"
+            WHERE ${mode}"SpotImages"."spotId" = "Spot"."id" AND ${mode}"SpotImages"."preview" = true
             LIMIT 1
           )`),
           'previewImage'
@@ -94,7 +97,16 @@ const addAvgRatingAndPreviewImage = {
 // get all spots--------------------------------------------------------------
 router.get('/', async (req, res) => {
     const Spots = await Spot.findAll({...addAvgRatingAndPreviewImage});
-    res.json({ Spots });
+
+    const changeToNum = Spots.map(spot => ({
+        ...spot.toJSON(),
+        lat: Number(spot.lat), 
+        lng: Number(spot.lng) 
+    }));
+
+
+
+    res.json({ Spots:changeToNum });
   });
 
 // Ziwen ^^^----------------------------------------------------------------------
@@ -124,16 +136,16 @@ router.get('/:spotId', async (req, res) => {
                     [
                         Sequelize.literal(`(
                             SELECT COUNT("Reviews"."id")
-                            FROM "${process.env.SCHEMA}"."Reviews"
-                            WHERE "${process.env.SCHEMA}"."Reviews"."spotId" = "Spot"."id"
+                            FROM ${mode}"Reviews"
+                            WHERE ${mode}"Reviews"."spotId" = "Spot"."id"
                         )`),
                         'numReviews'
                     ],
                     [
                         Sequelize.literal(`(
                             SELECT AVG("Reviews"."stars")
-                            FROM "${process.env.SCHEMA}"."Reviews"
-                            WHERE "${process.env.SCHEMA}"."Reviews"."spotId" = "Spot"."id"
+                            FROM ${mode}"Reviews"
+                            WHERE ${mode}"Reviews"."spotId" = "Spot"."id"
                         )`),
                         'avgStarRating'
                     ]

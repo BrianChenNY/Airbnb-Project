@@ -1,11 +1,14 @@
 const express = require('express');
-const { Spot, User, Booking, Review, ReviewImage, SpotImage, Sequelize } = require ('../../db/models')
+const { Spot, User, Booking, Review, ReviewImage, SpotImage, sequelize } = require ('../../db/models')
 const router = express.Router();
 const { Op, ExclusionConstraintError } = require('sequelize');
 const jwt = require('jsonwebtoken');
 const { requireAuth } = require('../../utils/auth');
 const { check } = require('express-validator');
 const { handleValidationErrors } = require('../../utils/validation');
+const dialect = sequelize.getDialect()
+const schema = process.env.schema;
+const mode = dialect === 'postgres' && schema ? `"${schema}".` : '';
 
 //Get all Reviews of the Current User--------------------------------------------------------
 router.get('/current', requireAuth, async (req, res) => {
@@ -20,11 +23,11 @@ router.get('/current', requireAuth, async (req, res) => {
                 attributes: {
                     include: [
                         [
-                            Sequelize.literal(`(
+                            sequelize.literal(`(
                                 SELECT COALESCE((
                                     SELECT "url"
-                                    FROM "${process.env.SCHEMA}"."SpotImages"
-                                    WHERE "${process.env.SCHEMA}"."SpotImages"."spotId" = "Spot"."id" AND "${process.env.SCHEMA}"."SpotImages"."preview" = true
+                                    FROM ${mode}"SpotImages"
+                                    WHERE ${mode}"SpotImages"."spotId" = "Spot"."id" AND ${mode}"SpotImages"."preview" = true
                                     LIMIT 1
                                 ), 'no preview image')
                             )`),
