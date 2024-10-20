@@ -3,9 +3,10 @@ import ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux';
 import App from './App';
 import './index.css';
-import configureStore from './store';
+import configureStore from './store/store';
 import { restoreCSRF, csrfFetch } from './store/csrf';
 import * as sessionActions from './store/session'; // <-- ADD THIS LINE
+import { ModalProvider } from './context/Modal';
 
 const store = configureStore();
 
@@ -25,8 +26,10 @@ if (process.env.NODE_ENV !== 'production') {
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
+    <ModalProvider>
     <Provider store={store}>
       <App />
     </Provider>
+    </ModalProvider>
   </React.StrictMode>
 );

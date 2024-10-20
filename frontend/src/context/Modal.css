@@ -1,0 +1,39 @@
+@import url('../index.css');
+
+#modal {
+	position: fixed;
+	top: 0;
+	right: 0;
+	left: 0;
+	bottom: 0;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+#modal-background {
+	position: fixed;
+	top: 0;
+	right: 0;
+	left: 0;
+	bottom: 0;
+	background-color: rgba(0, 0, 0, 0.7);
+}
+
+#modal-content {
+	position: absolute;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	background-color: white;
+	padding: 5rem 2rem;
+	border-radius: 12px;
+	border: solid 10px var(--deepSpaceAccent-clr);
+	transition: all 0.5s ease-in-out;
+}
+
+#modal-content label {
+	display: flex;
+	justify-content: space-between;
+}

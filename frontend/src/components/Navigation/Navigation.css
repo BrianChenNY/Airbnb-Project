@@ -1,0 +1,47 @@
+@import url('../../index.css');
+
+.navigation-ul {
+	list-style-type: none;
+	display: flex;
+	justify-content: space-between;
+	padding: 1rem 2rem;
+}
+
+.navigation-logo {
+	display: flex;
+	align-items: center;
+	color: var(--deepSpaceAccent-clr);
+	font-family: var(--ff-headers);
+	font-size: var(--fs-medium);
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.nav-btn-div {
+	display: flex;
+	gap: 2rem;
+	align-items: center;
+}
+
+.create-spot-btn {
+	border: 2px solid var(--deepSpaceAccent-clr);
+	border-radius: 18px;
+	padding: 0.6rem 2rem;
+	font-family: var(--ff-headers);
+	background-color: var(--lightSpaceAccent-clr);
+	transition: all 0.5s ease;
+}
+
+.create-spot-btn:hover {
+	box-shadow: 2px 2px 10px var(--deepSpaceAccent-clr),
+		-2px -2px 10px var(--deepSpaceAccent-clr);
+	background-color: var(--white-clr);
+}
+
+.navigation-logo {
+	transition: all 0.2s ease-in-out;
+}
+
+.navigation-logo:hover {
+	transform: scale(1.1, 1.1);
+}
